@@ -157,4 +157,11 @@
     <color name="ksh_key_item_color">@color/material_grey_600</color>
     <color name="ksh_key_item_background">@color/material_grey_100</color>
 
+    <!-- NdroidStatusBar -->
+    <color name="divider">#B6B6B6</color>
+    <color name="textColor">#FF5722</color>
+    <color name="colorIcon">#FF5722</color>
+    <color name="status_bar_background">#CC000000</color>
+    <color name="icon_bar_background">#E6000000</color>
+
 </resources>

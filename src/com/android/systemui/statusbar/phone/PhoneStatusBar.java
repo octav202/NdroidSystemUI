@@ -22,6 +22,7 @@ import static android.app.StatusBarManager.NAVIGATION_HINT_IME_SHOWN;
 import static android.app.StatusBarManager.WINDOW_STATE_HIDDEN;
 import static android.app.StatusBarManager.WINDOW_STATE_SHOWING;
 import static android.app.StatusBarManager.windowStateToString;
+import static android.widget.RelativeLayout.TRUE;
 import static com.android.systemui.statusbar.phone.BarTransitions.MODE_LIGHTS_OUT;
 import static com.android.systemui.statusbar.phone.BarTransitions.MODE_LIGHTS_OUT_TRANSPARENT;
 import static com.android.systemui.statusbar.phone.BarTransitions.MODE_OPAQUE;
@@ -100,6 +101,7 @@ import android.util.DisplayMetrics;
 import android.util.EventLog;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.IRotationWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -117,6 +119,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.internal.logging.MetricsLogger;
@@ -142,6 +145,7 @@ import com.android.systemui.classifier.FalsingManager;
 import com.android.systemui.doze.DozeHost;
 import com.android.systemui.doze.DozeLog;
 import com.android.systemui.keyguard.KeyguardViewMediator;
+import com.android.systemui.ndroid.NdroidStatusBar;
 import com.android.systemui.qs.QSContainer;
 import com.android.systemui.qs.QSPanel;
 import com.android.systemui.recents.ScreenPinningRequest;
@@ -3461,6 +3465,12 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     @Override
     public void createAndAddWindows() {
         addStatusBarWindow();
+
+        // NdroidStatusBar
+        NdroidStatusBar statusBar = null;
+        if (statusBar == null) {
+            statusBar = new NdroidStatusBar(mContext);
+        }
     }
 
     private void addStatusBarWindow() {
@@ -3468,7 +3478,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         mStatusBarWindowManager = new StatusBarWindowManager(mContext);
         mRemoteInputController = new RemoteInputController(mStatusBarWindowManager,
                 mHeadsUpManager);
-        mStatusBarWindowManager.add(mStatusBarWindow, getStatusBarHeight());
+        //mStatusBarWindowManager.add(mStatusBarWindow, getStatusBarHeight());
     }
 
     // called by makeStatusbar and also by PhoneStatusBarView

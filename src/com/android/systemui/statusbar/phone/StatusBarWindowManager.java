@@ -198,28 +198,28 @@ public class StatusBarWindowManager implements RemoteInputController.Callback {
     }
 
     private void apply(State state) {
-        applyKeyguardFlags(state);
-        applyForceStatusBarVisibleFlag(state);
-        applyFocusableFlag(state);
-        adjustScreenOrientation(state);
-        applyHeight(state);
-        applyUserActivityTimeout(state);
-        applyInputFeatures(state);
-        applyFitsSystemWindows(state);
-        applyModalFlag(state);
-        applyBrightness(state);
-        applyHasTopUi(state);
-        if (mLp.copyFrom(mLpChanged) != 0) {
-            mWindowManager.updateViewLayout(mStatusBarView, mLp);
-        }
-        if (mHasTopUi != mHasTopUiChanged) {
-            try {
-                mActivityManager.setHasTopUi(mHasTopUiChanged);
-            } catch (RemoteException e) {
-                Log.e(TAG, "Failed to call setHasTopUi", e);
-            }
-            mHasTopUi = mHasTopUiChanged;
-        }
+//        applyKeyguardFlags(state);
+//        applyForceStatusBarVisibleFlag(state);
+//        applyFocusableFlag(state);
+//        adjustScreenOrientation(state);
+//        applyHeight(state);
+//        applyUserActivityTimeout(state);
+//        applyInputFeatures(state);
+//        applyFitsSystemWindows(state);
+//        applyModalFlag(state);
+//        applyBrightness(state);
+//        applyHasTopUi(state);
+//        if (mLp.copyFrom(mLpChanged) != 0) {
+//            mWindowManager.updateViewLayout(mStatusBarView, mLp);
+//        }
+//        if (mHasTopUi != mHasTopUiChanged) {
+//            try {
+//                mActivityManager.setHasTopUi(mHasTopUiChanged);
+//            } catch (RemoteException e) {
+//                Log.e(TAG, "Failed to call setHasTopUi", e);
+//            }
+//            mHasTopUi = mHasTopUiChanged;
+//        }
     }
 
     private void applyForceStatusBarVisibleFlag(State state) {

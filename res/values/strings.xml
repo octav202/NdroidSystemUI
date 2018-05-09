@@ -1701,4 +1701,16 @@
     <!-- Text body for dialog alerting user that their phone has reached a certain temperature and may start to slow down in order to cool down. [CHAR LIMIT=300] -->
     <string name="high_temp_dialog_message">Your phone will automatically try to cool down. You can still use your phone, but it may run slower.\n\nOnce your phone has cooled down, it will run normally.</string>
 
+    <!-- NdroidStatusBar-->
+    <string name="app_name">NdroidStatusBar</string>
+    <string name="wifi">Wifi</string>
+    <string name="mobile_data">Mobile Data</string>
+    <string name="ringtone">Ringtone</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="screen_rotation">Screen Rotation</string>
+    <string name="location">Location</string>
+    <string name="nfc">NFC</string>
+    <string name="airplane">Airplane</string>
+    <string name="brightness">Brightness</string>
+    <string name="carrier">Orange</string>
 </resources>
