@@ -164,6 +164,8 @@
 
     <!-- shortcut manager -->
     <uses-permission android:name="android.permission.RESET_SHORTCUT_MANAGER_THROTTLING" />
+    <!-- Do not Disturb - NdroidStatusBar -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
 
     <application
         android:name=".SystemUIApplication"

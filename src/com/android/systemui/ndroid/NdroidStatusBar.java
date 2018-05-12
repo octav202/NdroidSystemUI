@@ -1,11 +1,15 @@
 package com.android.systemui.ndroid;
 
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.database.ContentObserver;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
@@ -13,16 +17,24 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.android.systemui.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.content.Context.WINDOW_SERVICE;
 
@@ -33,16 +45,18 @@ public class NdroidStatusBar extends RelativeLayout {
     private Context mContext;
 
     // Dimensions
-    private int SETTINGS_HEIGHT = 800;
+    private int SETTINGS_HEIGHT = 900;
     private int BAR_HEIGHT = 90;
     private int BUTTON_MARGIN = 80;
     private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 60;
     private int ICON_MARGIN = 7;
     private int ICON_MARGIN_END = 35;
-    private int SETTINGS_TOP_MARGIN_COLLAPSED = -800;
+    private int SETTINGS_TOP_MARGIN_COLLAPSED = -900;
     private int LAYOUT_MARGIN = 15;
     private int BAR_ICON_MARGIN = 45;
+    private int GRID_HEIGHT = 100;
+    private int GRID_MARGIN_START_END = 100;
 
     private int mLastTopMargin;
 
@@ -100,6 +114,16 @@ public class NdroidStatusBar extends RelativeLayout {
     private int mRingtoneEndId = 16;
     private TextView mRingtoneText;
 
+    // Modes - Personal Assistant
+    private RelativeLayout mModesLayout;
+    private int MODES_LAYOUT_ID = 30;
+    private GridView mModesGrid;
+    private int MODES_GRID_ID = 31;
+    private int MODES_GRID_NUM_COLUMNS = 5;
+    private int MODES_GRID_VERTICAL_SPACE = 10;
+    private int MODES_GRID_HORIZONTAL_SPACE = 10;
+
+
     // [_____ Status Bar _____] //
     private RelativeLayout mIconLayout;
     private int mIconLayoutId = 20;
@@ -140,8 +164,8 @@ public class NdroidStatusBar extends RelativeLayout {
     // Touch Events
     private float mStartPoint;
     private int mOffset = 0;
-    private static final int MIN_OFFSET = -800;
-    private static final int MAX_OFFSET = 800;
+    private static final int MIN_OFFSET = -900;
+    private static final int MAX_OFFSET = 900;
 
     public NdroidStatusBar(Context context) {
         super(context);
@@ -178,6 +202,13 @@ public class NdroidStatusBar extends RelativeLayout {
         mVolumeObserver = new RingtoneVolumeObserver(mContext, new Handler());
         mContext.getContentResolver().registerContentObserver(Settings.System.CONTENT_URI,
                 true, mVolumeObserver);
+
+        NotificationManager n = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (!n.isNotificationPolicyAccessGranted()) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+            context.startActivity(intent);
+            return;
+        }
     }
 
     // Init Settings Layout
@@ -193,6 +224,7 @@ public class NdroidStatusBar extends RelativeLayout {
         initButtonsLayout();
         initBrightnessLayout();
         initRingtoneLayout();
+        initModesLayout();
     }
 
     private void initButtonsLayout() {
@@ -431,6 +463,52 @@ public class NdroidStatusBar extends RelativeLayout {
         mSettingsLayout.addView(mRingtoneLayout);
     }
 
+    private void initModesLayout() {
+        // Modes Layout
+        mModesLayout = new RelativeLayout(mContext);
+        mModesLayout.setId(MODES_LAYOUT_ID);
+        mModesLayout.setBackgroundColor(Color.TRANSPARENT);
+        LayoutParams mParams = new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT);
+        mParams.addRule(BELOW, mRingtoneLayoutId);
+        mParams.setMargins(LAYOUT_MARGIN, 0, LAYOUT_MARGIN, 0);
+        mModesLayout.setLayoutParams(mParams);
+
+        mModesGrid = new GridView(mContext);
+        LayoutParams gParams = new LayoutParams(LayoutParams.MATCH_PARENT,
+                GRID_HEIGHT);
+        mModesGrid.setBackgroundColor(Color.TRANSPARENT);
+        gParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+        gParams.setMargins(GRID_MARGIN_START_END, ICON_MARGIN, ICON_MARGIN, GRID_MARGIN_START_END);
+        mModesGrid.setLayoutParams(gParams);
+        mModesGrid.setId(MODES_GRID_ID);
+        mModesLayout.addView(mModesGrid);
+        mModesGrid.setNumColumns(MODES_GRID_NUM_COLUMNS);
+        mModesGrid.setVerticalSpacing(MODES_GRID_VERTICAL_SPACE);
+        mModesGrid.setHorizontalSpacing(MODES_GRID_HORIZONTAL_SPACE);
+
+        // Modes Adapter
+        List<Mode> modes = getModes();
+        List<String> modeNames = new ArrayList<String >();
+        for (Mode m:modes) {
+            modeNames.add(m.getName());
+        }
+        final ModesAdapter adapter = new ModesAdapter(mContext, modes);
+        mModesGrid.setAdapter(adapter);
+
+        // Grid Item listener
+        mModesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (adapter != null) {
+                    adapter.onItemSelected(position);
+                }
+            }
+        });
+
+        mSettingsLayout.addView(mModesLayout);
+    }
+
     // Init Status Bar Layout
     private void initIconLayout() {
         LayoutParams iparam = new LayoutParams(LayoutParams.MATCH_PARENT, BAR_HEIGHT);
@@ -586,15 +664,12 @@ public class NdroidStatusBar extends RelativeLayout {
                 LayoutParams par = (LayoutParams)
                         mSettingsLayout.getLayoutParams();
                 mLastTopMargin = par.topMargin;
-                Log.d(TAG, "ACTION_UP margin =" + mLastTopMargin);
                 mStartPoint = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
                 LayoutParams params = (LayoutParams)
                         mSettingsLayout.getLayoutParams();
                 int margin = params.topMargin;
-
-                Log.d(TAG, "ACTION_UP margin =" + margin);
 
                 // Expand
                 if (margin >= SETTINGS_TOP_MARGIN_COLLAPSED / 2) {
@@ -643,7 +718,6 @@ public class NdroidStatusBar extends RelativeLayout {
         } else if (topMargin >= 0) {
             topMargin = 0;
         }
-        Log.d(TAG, "\n updateLayoutOffset()  TOP MARGIN " + topMargin);
         params.topMargin = topMargin;
         mSettingsLayout.setLayoutParams(params);
     }
@@ -652,7 +726,6 @@ public class NdroidStatusBar extends RelativeLayout {
      * Expand Status Bar and show Settings.
      */
     private void expandStatusBar() {
-        Log.d(TAG, "expandStatusBar()");
         LayoutParams params = (LayoutParams)
                 mSettingsLayout.getLayoutParams();
         params.topMargin = 0;
@@ -663,7 +736,6 @@ public class NdroidStatusBar extends RelativeLayout {
      * Collapse Status bar and hide Settings.
      */
     private void collapseStatusBar() {
-        Log.d(TAG, "collapseStatusBar()");
         LayoutParams params = (LayoutParams)
                 mSettingsLayout.getLayoutParams();
         params.topMargin = SETTINGS_TOP_MARGIN_COLLAPSED;
@@ -679,13 +751,7 @@ public class NdroidStatusBar extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 mWifi = !mWifi;
-                if (mWifi) {
-                    mWifiIcon.setVisibility(VISIBLE);
-                    mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
-                } else {
-                    mWifiIcon.setVisibility(GONE);
-                    mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi_disabled));
-                }
+                setWifi(mWifi);
             }
         });
 
@@ -736,13 +802,7 @@ public class NdroidStatusBar extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 mBluetooth =! mBluetooth;
-                if (mBluetooth) {
-                    mBluetoothIcon.setVisibility(View.VISIBLE);
-                    mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth));
-                } else {
-                    mBluetoothIcon.setVisibility(View.GONE);
-                    mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth_disabled));
-                }
+                setBluetooth(mBluetooth);
             }
         });
 
@@ -805,13 +865,12 @@ public class NdroidStatusBar extends RelativeLayout {
         mRingtoneBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.d(TAG, " Progress : " + progress + ", fromUser : " + fromUser);
+                Log.d(TAG, " Ringtone - onProgressChanged : " + progress + ", fromUser : " + fromUser);
 
                 switch (progress) {
                     case 0:
                         mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
                         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
-                        break;
                     default:
                         mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
                         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
@@ -839,29 +898,16 @@ public class NdroidStatusBar extends RelativeLayout {
         mBrightnessBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    // TODO - Add System Permission
-                    try {
-                        Settings.System.putInt(
-                                mContext.getContentResolver(),
-                                Settings.System.SCREEN_BRIGHTNESS,
-                                progress
-                        );
-                    } catch (Exception e) {
-                        Toast.makeText(mContext, "Failed set Brightness - No Permission",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
+                setBrightness(progress, fromUser);
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
+
     }
 
     public void setBatteryLevel(int level) {
@@ -883,6 +929,73 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Brint text and icons on top of battery level
         bringViewsToFront();
+    }
+
+    private void setWifi(boolean status) {
+        Log.d(TAG, "setWifi() " + status);
+        mWifi = status;
+        if (mWifi) {
+            mWifiIcon.setVisibility(VISIBLE);
+            mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
+        } else {
+            mWifiIcon.setVisibility(GONE);
+            mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi_disabled));
+        }
+    }
+
+    private void setBluetooth(boolean status) {
+        Log.d(TAG, "setBluetooth() " + status);
+        mBluetooth = status;
+        if (mBluetooth) {
+            mBluetoothIcon.setVisibility(View.VISIBLE);
+            mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth));
+        } else {
+            mBluetoothIcon.setVisibility(View.GONE);
+            mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth_disabled));
+        }
+    }
+
+
+    private void setRingtone(int type) {
+        Log.d(TAG, "setRingtone() " + type);
+        switch (type) {
+            case ON:
+                mRingtoneBar.setProgress(7);
+                mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+                mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+                break;
+            case OFF:
+                mRingtoneBar.setProgress(0);
+                mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                break;
+            case VIBRATE:
+                mRingtoneBar.setProgress(0);
+                mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
+                mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void setBrightness(int progress, boolean fromUser) {
+        Log.d(TAG, "setBrightness() " + progress + "fromUser: " + fromUser);
+        mBrightnessBar.setProgress(progress);
+
+        if (fromUser) {
+            // TODO - Add System Permission
+            try {
+                Settings.System.putInt(
+                        mContext.getContentResolver(),
+                        Settings.System.SCREEN_BRIGHTNESS,
+                        progress
+                );
+            } catch (Exception e) {
+                Toast.makeText(mContext, "Failed set Brightness - No Permission",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void bringViewsToFront() {
@@ -924,9 +1037,242 @@ public class NdroidStatusBar extends RelativeLayout {
         @Override
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
+            Log.d(TAG, "onChange() Ringtone");
             AudioManager audio = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
             mRingtoneBar.setProgress(audio.getStreamVolume(AudioManager.STREAM_RING));
         }
+    }
+
+    /**
+     * Modes
+     */
+    private List<Mode> getModes() {
+
+        String PROVIDER_NAME = "com.example.octav.proiect";
+        String URL = "content://" + PROVIDER_NAME + "/modes";
+
+        Uri modes = Uri.parse(URL);
+
+        Cursor cursor = mContext.getContentResolver().query(modes, null, null, null, null);
+
+        List<Mode> modeList = new ArrayList<Mode>();
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (cursor.isAfterLast() == false) {
+                int id = cursor.getInt(0);
+                String name = cursor.getString(1);
+                boolean wifi = cursor.getInt(4) > 0;
+                String ringtone = cursor.getString(5);
+                String brightness = cursor.getString(8);
+                String bluetooth = cursor.getString(9);
+
+                // Ringtone
+                int ring = 0;
+                if (ringtone.equals("Mute"))
+                    ring = OFF;
+                if (ringtone.equals("Normal"))
+                    ring = ON;
+                if (ringtone.equals("Vibrate"))
+                    ring = VIBRATE;
+
+                // Brightness
+                int bright = 0;
+                if (brightness.equals("Low")) {
+                    bright = 0;
+                } else if (brightness.equals("Medium")) {
+                    bright = 127;
+                } else if (brightness.equals("High")) {
+                    bright = 128;
+                }
+
+                // Bluetooth
+                boolean bt = false;
+                if (bluetooth.equals("Off")) {
+                    bt = false;
+                } else if (bluetooth.equals("On")) {
+                    bt = true;
+                }
+
+                Mode m = new Mode(id, name, false, wifi, ring, bright, bt);
+                Log.d(TAG, "Mode " + m);
+                modeList.add(m);
+                cursor.moveToNext();
+            }
+        }
+        return modeList;
+    }
+
+    private class Mode {
+        private int id;
+        private String name;
+        private boolean selected;
+        boolean wifi;
+        int ringtone;
+        int brightness;
+        boolean bluetooth;
+
+        public Mode(int id, String name, boolean selected, boolean wifi, int ringtone, int brightness, boolean bluetooth) {
+            this.id = id;
+            this.name = name;
+            this.selected = selected;
+            this.wifi = wifi;
+            this.ringtone = ringtone;
+            this.brightness = brightness;
+            this.bluetooth = bluetooth;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public boolean isSelected() {
+            return selected;
+        }
+
+        public void setSelected(boolean selected) {
+            this.selected = selected;
+        }
+
+        public boolean isWifi() {
+            return wifi;
+        }
+
+        public void setWifi(boolean wifi) {
+            this.wifi = wifi;
+        }
+
+        public int getRingtone() {
+            return ringtone;
+        }
+
+        public void setRingtone(int ringtone) {
+            this.ringtone = ringtone;
+        }
+
+        public int getBrightness() {
+            return brightness;
+        }
+
+        public void setBrightness(int brightness) {
+            this.brightness = brightness;
+        }
+
+        public boolean isBluetooth() {
+            return bluetooth;
+        }
+
+        public void setBluetooth(boolean bluetooth) {
+            this.bluetooth = bluetooth;
+        }
+
+        @Override
+        public String toString() {
+            return "Mode{" +
+                    "id=" + id +
+                    ", name='" + name + '\'' +
+                    ", selected=" + selected +
+                    ", wifi=" + wifi +
+                    ", ringtone='" + ringtone + '\'' +
+                    ", brightness='" + brightness + '\'' +
+                    ", bluetooth='" + bluetooth + '\'' +
+                    '}';
+        }
+    }
+
+    private void setMode(Mode mode) {
+        Log.d(TAG, "setMode() : " + mode);
+        setWifi(mode.isWifi());
+        setBluetooth(mode.isBluetooth());
+        setRingtone(mode.getRingtone());
+        setBrightness(mode.getBrightness(), false);
+    }
+
+    public class ModesAdapter extends BaseAdapter {
+
+        private List<Mode> mModes;
+        private Context mContext;
+
+        public ModesAdapter(Context c, List<Mode> data) {
+            mContext = c;
+            mModes = data;
+        }
+
+        public int getCount() {
+            return mModes.size();
+        }
+
+        public Object getItem(int position) {
+            return null;
+        }
+
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View v = convertView;
+            FileHolder holder = new FileHolder();
+            if (convertView == null) {
+                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                v = inflater.inflate(R.layout.mode_grid_item, null);
+                holder.modeTextView = (TextView) v.findViewById(R.id.modeTextView);
+                v.setTag(holder);
+            } else {
+                holder = (FileHolder) v.getTag();
+            }
+
+            Mode mode = mModes.get(position);
+            holder.modeTextView.setText(mode.getName());
+            holder.modeTextView.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+            if (mode.isSelected()) {
+                v.setBackground(ContextCompat.getDrawable(mContext, R.drawable.mode_background_selected));
+            } else {
+                v.setBackground(ContextCompat.getDrawable(mContext, R.drawable.mode_background));
+            }
+            return v;
+        }
+
+        // Called when an item is selected
+        public void onItemSelected(int position) {
+            Log.d(TAG, "onItemSelected() " + position);
+            // Update mode list and set mode selected
+            for (int i = 0; i < mModes.size(); i++) {
+                Mode mode = mModes.get(i);
+                if (i == position) {
+                    mode.setSelected(true);
+                    setMode(mode);
+                } else {
+                    mode.setSelected(false);
+                }
+            }
+
+            // Notify Personal Assistant app
+            final Intent intent = new Intent();
+            intent.setAction("com.ndroid.ndroidstatusbar");
+            intent.putExtra("ModeId", mModes.get(position).getId());
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            mContext.sendBroadcast(intent);
+
+            // Refresh Grid to apply background to selected item
+            notifyDataSetChanged();
+        }
+
+        public class FileHolder {
+            TextView modeTextView;
+        }
+
     }
 
 }
