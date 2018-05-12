@@ -283,13 +283,13 @@ public class NavigationBarView extends LinearLayout {
             mDockedIcon = ctx.getDrawable(R.drawable.ic_sysbar_docked);
         }
         if (oldConfig.densityDpi != newConfig.densityDpi) {
-            mBackIcon = ctx.getDrawable(R.drawable.ic_sysbar_back);
+            mBackIcon = ctx.getDrawable(R.drawable.ic_navbar_back);
             mBackLandIcon = mBackIcon;
-            mBackAltIcon = ctx.getDrawable(R.drawable.ic_sysbar_back_ime);
+            mBackAltIcon = ctx.getDrawable(R.drawable.ic_navbar_back_ime);
             mBackAltLandIcon = mBackAltIcon;
 
-            mHomeDefaultIcon = ctx.getDrawable(R.drawable.ic_sysbar_home);
-            mRecentIcon = ctx.getDrawable(R.drawable.ic_sysbar_recent);
+            mHomeDefaultIcon = ctx.getDrawable(R.drawable.ic_navbar_home);
+            mRecentIcon = ctx.getDrawable(R.drawable.ic_navbar_recent);
             mMenuIcon = ctx.getDrawable(R.drawable.ic_sysbar_menu);
             mImeIcon = ctx.getDrawable(R.drawable.ic_ime_switcher_default);
 
