@@ -46,10 +46,10 @@ public class NdroidStatusBar extends RelativeLayout {
 
     // Dimensions
     private int SETTINGS_HEIGHT = 900;
-    private int BAR_HEIGHT = 90;
+    private int BAR_HEIGHT = 85;
     private int BUTTON_MARGIN = 80;
     private int BUTTON_SIZE = 100;
-    private int ICON_SIZE = 60;
+    private int ICON_SIZE = 55;
     private int ICON_MARGIN = 7;
     private int ICON_MARGIN_END = 35;
     private int SETTINGS_TOP_MARGIN_COLLAPSED = -900;
