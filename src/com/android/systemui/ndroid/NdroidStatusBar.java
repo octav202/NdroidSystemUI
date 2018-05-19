@@ -45,17 +45,17 @@ public class NdroidStatusBar extends RelativeLayout {
     private Context mContext;
 
     // Dimensions
-    private int SETTINGS_HEIGHT = 900;
+    private int SETTINGS_HEIGHT = 920;
     private int BAR_HEIGHT = 85;
     private int BUTTON_MARGIN = 80;
     private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 55;
     private int ICON_MARGIN = 7;
     private int ICON_MARGIN_END = 35;
-    private int SETTINGS_TOP_MARGIN_COLLAPSED = -900;
+    private int SETTINGS_TOP_MARGIN_COLLAPSED = -920;
     private int LAYOUT_MARGIN = 15;
     private int BAR_ICON_MARGIN = 45;
-    private int GRID_HEIGHT = 100;
+    private int GRID_HEIGHT = 400;
     private int GRID_MARGIN_START_END = 100;
 
     private int mLastTopMargin;
@@ -119,7 +119,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private int MODES_LAYOUT_ID = 30;
     private GridView mModesGrid;
     private int MODES_GRID_ID = 31;
-    private int MODES_GRID_NUM_COLUMNS = 5;
+    private int MODES_GRID_NUM_COLUMNS = 4;
     private int MODES_GRID_VERTICAL_SPACE = 10;
     private int MODES_GRID_HORIZONTAL_SPACE = 10;
 
@@ -164,8 +164,8 @@ public class NdroidStatusBar extends RelativeLayout {
     // Touch Events
     private float mStartPoint;
     private int mOffset = 0;
-    private static final int MIN_OFFSET = -900;
-    private static final int MAX_OFFSET = 900;
+    private static final int MIN_OFFSET = -920;
+    private static final int MAX_OFFSET = 920;
 
     public NdroidStatusBar(Context context) {
         super(context);
@@ -479,7 +479,7 @@ public class NdroidStatusBar extends RelativeLayout {
                 GRID_HEIGHT);
         mModesGrid.setBackgroundColor(Color.TRANSPARENT);
         gParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-        gParams.setMargins(GRID_MARGIN_START_END, ICON_MARGIN, ICON_MARGIN, GRID_MARGIN_START_END);
+        gParams.setMargins(GRID_MARGIN_START_END, 0, ICON_MARGIN, GRID_MARGIN_START_END);
         mModesGrid.setLayoutParams(gParams);
         mModesGrid.setId(MODES_GRID_ID);
         mModesLayout.addView(mModesGrid);
@@ -487,24 +487,29 @@ public class NdroidStatusBar extends RelativeLayout {
         mModesGrid.setVerticalSpacing(MODES_GRID_VERTICAL_SPACE);
         mModesGrid.setHorizontalSpacing(MODES_GRID_HORIZONTAL_SPACE);
 
-        // Modes Adapter
-        List<Mode> modes = getModes();
-        List<String> modeNames = new ArrayList<String >();
-        for (Mode m:modes) {
-            modeNames.add(m.getName());
-        }
-        final ModesAdapter adapter = new ModesAdapter(mContext, modes);
-        mModesGrid.setAdapter(adapter);
-
-        // Grid Item listener
-        mModesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        new Handler().postDelayed(new Runnable() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (adapter != null) {
-                    adapter.onItemSelected(position);
+            public void run() {
+                // Modes Adapter
+                List<Mode> modes = getModes();
+                List<String> modeNames = new ArrayList<String >();
+                for (Mode m:modes) {
+                    modeNames.add(m.getName());
                 }
+                final ModesAdapter adapter = new ModesAdapter(mContext, modes);
+                mModesGrid.setAdapter(adapter);
+
+                // Grid Item listener
+                mModesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        if (adapter != null) {
+                            adapter.onItemSelected(position);
+                        }
+                    }
+                });
             }
-        });
+        }, 2000);
 
         mSettingsLayout.addView(mModesLayout);
     }
@@ -1054,9 +1059,9 @@ public class NdroidStatusBar extends RelativeLayout {
         Uri modes = Uri.parse(URL);
 
         Cursor cursor = mContext.getContentResolver().query(modes, null, null, null, null);
-
         List<Mode> modeList = new ArrayList<Mode>();
         if (cursor != null) {
+            Log.d(TAG, "Cursor count " +cursor.getCount());
             cursor.moveToFirst();
             while (cursor.isAfterLast() == false) {
                 int id = cursor.getInt(0);
@@ -1098,6 +1103,8 @@ public class NdroidStatusBar extends RelativeLayout {
                 modeList.add(m);
                 cursor.moveToNext();
             }
+        } else {
+            Log.e(TAG, "Cursor is null");
         }
         return modeList;
     }
