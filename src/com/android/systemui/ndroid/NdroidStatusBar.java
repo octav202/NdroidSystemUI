@@ -1,8 +1,10 @@
 package com.android.systemui.ndroid;
 
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -118,6 +120,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private RelativeLayout mModesLayout;
     private int MODES_LAYOUT_ID = 30;
     private GridView mModesGrid;
+    private ModesAdapter mModesAdapter;
     private int MODES_GRID_ID = 31;
     private int MODES_GRID_NUM_COLUMNS = 4;
     private int MODES_GRID_VERTICAL_SPACE = 10;
@@ -171,6 +174,9 @@ public class NdroidStatusBar extends RelativeLayout {
         super(context);
         Log.d(TAG, "NdroidStatusBar()");
         mContext = context;
+
+        registerModerReceiver();
+
         initSettingsLayout();
         initIconLayout();
         initListeners();
@@ -496,20 +502,20 @@ public class NdroidStatusBar extends RelativeLayout {
                 for (Mode m:modes) {
                     modeNames.add(m.getName());
                 }
-                final ModesAdapter adapter = new ModesAdapter(mContext, modes);
-                mModesGrid.setAdapter(adapter);
+                mModesAdapter = new ModesAdapter(mContext, modes);
+                mModesGrid.setAdapter(mModesAdapter);
 
                 // Grid Item listener
                 mModesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        if (adapter != null) {
-                            adapter.onItemSelected(position);
+                        if (mModesAdapter != null) {
+                            mModesAdapter.onItemSelected(position);
                         }
                     }
                 });
             }
-        }, 2000);
+        }, 4000);
 
         mSettingsLayout.addView(mModesLayout);
     }
@@ -1276,10 +1282,47 @@ public class NdroidStatusBar extends RelativeLayout {
             notifyDataSetChanged();
         }
 
+        public Mode onModeSelected(int modeId) {
+
+            Mode selected = null;
+
+            for (Mode mode :mModes) {
+                if (modeId == mode.getId()) {
+                    mode.setSelected(true);
+                    selected = mode;
+                } else {
+                    mode.setSelected(false);
+                }
+            }
+
+            setMode(selected);
+            notifyDataSetChanged();
+            return selected;
+        }
+
         public class FileHolder {
             TextView modeTextView;
         }
 
     }
+
+    private void registerModerReceiver() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("com.ndroid.personalassistant");
+        mContext.registerReceiver(mModeReceiver, filter);
+    }
+
+    private BroadcastReceiver mModeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int id = intent.getIntExtra("ModeId", 0);
+            if (id != 0) {
+                if (mModesAdapter != null) {
+                    Mode mode = mModesAdapter.onModeSelected(id);
+                    Toast.makeText(context, mode.name + " mode selected.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    };
 
 }
