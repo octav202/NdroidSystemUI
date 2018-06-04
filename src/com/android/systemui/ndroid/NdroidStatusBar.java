@@ -48,10 +48,10 @@ public class NdroidStatusBar extends RelativeLayout {
 
     // Dimensions
     private int SETTINGS_HEIGHT = 920;
-    private int BAR_HEIGHT = 85;
+    private int BAR_HEIGHT = 80;
     private int BUTTON_MARGIN = 80;
     private int BUTTON_SIZE = 100;
-    private int ICON_SIZE = 55;
+    private int ICON_SIZE = 46;
     private int ICON_MARGIN = 7;
     private int ICON_MARGIN_END = 35;
     private int SETTINGS_TOP_MARGIN_COLLAPSED = -920;
@@ -548,6 +548,7 @@ public class NdroidStatusBar extends RelativeLayout {
         cParams.setMarginStart(ICON_MARGIN_END);
         mCarrier.setTextColor(ContextCompat.getColor(mContext, R.color.textColor));
         mCarrier.setBackgroundColor(Color.TRANSPARENT);
+        mCarrier.setTextSize(13);
         mIconLayout.addView(mCarrier);
 
         // Clock
@@ -1112,6 +1113,9 @@ public class NdroidStatusBar extends RelativeLayout {
         } else {
             Log.e(TAG, "Cursor is null");
         }
+
+        cursor.close();
+
         return modeList;
     }
 
