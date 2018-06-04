@@ -883,6 +883,7 @@ public class NdroidStatusBar extends RelativeLayout {
                     case 0:
                         mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
                         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                        break;
                     default:
                         mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
                         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
