@@ -789,24 +789,7 @@ public class NdroidStatusBar extends RelativeLayout {
                     mRingtone = ON;
                 }
 
-                mIconLayout.removeView(mRingtoneIcon);
-                switch (mRingtone) {
-                    case ON:
-                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
-                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
-                        break;
-                    case OFF:
-                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
-                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
-                        break;
-                    case VIBRATE:
-                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
-                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
-                        break;
-                    default:
-                        break;
-                }
-                mIconLayout.addView(mRingtoneIcon);
+                setRingtoneUI(mRingtone);
             }
         });
 
@@ -969,9 +952,11 @@ public class NdroidStatusBar extends RelativeLayout {
     }
 
 
-    private void setRingtone(int type) {
+    private void setRingtoneUI(int type) {
         Log.d(TAG, "setRingtone() " + type);
-        switch (type) {
+        mRingtone = type;
+        mIconLayout.removeView(mRingtoneIcon);
+        switch (mRingtone) {
             case ON:
                 mRingtoneBar.setProgress(7);
                 mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
@@ -990,6 +975,7 @@ public class NdroidStatusBar extends RelativeLayout {
             default:
                 break;
         }
+        mIconLayout.addView(mRingtoneIcon);
     }
 
     private void setBrightness(int progress, boolean fromUser) {
@@ -1213,7 +1199,7 @@ public class NdroidStatusBar extends RelativeLayout {
         Log.d(TAG, "setMode() : " + mode);
         setWifi(mode.isWifi());
         setBluetooth(mode.isBluetooth());
-        setRingtone(mode.getRingtone());
+        setRingtoneUI(mode.getRingtone());
         setBrightness(mode.getBrightness(), false);
     }
 
