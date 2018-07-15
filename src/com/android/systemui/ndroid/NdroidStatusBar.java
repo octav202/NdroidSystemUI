@@ -35,7 +35,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.android.systemui.R;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static android.content.Context.WINDOW_SERVICE;
@@ -170,6 +172,9 @@ public class NdroidStatusBar extends RelativeLayout {
     private static final int MIN_OFFSET = -920;
     private static final int MAX_OFFSET = 920;
 
+    // Update Clock
+    Handler mClockHandler;
+
     public NdroidStatusBar(Context context) {
         super(context);
         Log.d(TAG, "NdroidStatusBar()");
@@ -180,6 +185,8 @@ public class NdroidStatusBar extends RelativeLayout {
         initSettingsLayout();
         initIconLayout();
         initListeners();
+
+        startClockUpdates();
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -217,6 +224,27 @@ public class NdroidStatusBar extends RelativeLayout {
         }
     }
 
+    /**
+     * ############### CLOCK UPDATES #################
+     */
+    private Runnable mClockRunnable = new Runnable() {
+        @Override
+        public void run() {
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+            String time = sdf.format(new Date());
+            mClockText.setText(time);
+            mClockHandler.postDelayed(this, 1000 * 30);//30 sec
+        }
+    };
+    private void startClockUpdates() {
+        mClockHandler = new Handler();
+        mClockHandler.post(mClockRunnable);
+    }
+
+
+    /**
+     * ############### LAYOUT #################
+     */
     // Init Settings Layout
     private void initSettingsLayout() {
         mSettingsLayout = new RelativeLayout(mContext);
